@@ -7,14 +7,14 @@ import pygame as pg
 
 class Particle(object):
     def __init__(self: Self,
-                 mass: Real,
-                 pos: pg.Vector2,
-                 velocity: pg.Vector2,
-                 accel: pg.Vector2) -> None:
+                 mass: Real=1,
+                 pos: pg.Vector2=(0, 0),
+                 velocity: pg.Vector2=(0, 0),
+                 net_force: pg.Vector2=(0, 0)) -> None:
         self._mass = mass
         self._pos = pg.Vector2(pos)
         self._velocity = pg.Vector2(velocity)
-        self._accel = pg.Vector2(accel)
+        self._net_force = pg.Vector2(net_force)
 
     @property
     def mass(self: Self) -> Real:
@@ -25,7 +25,7 @@ class Particle(object):
         self._mass = value
 
     @property
-    def pos(self: Self) -> None:
+    def pos(self: Self) -> pg.Vector2:
         return self._pos
 
     @pos.setter
@@ -33,7 +33,7 @@ class Particle(object):
         self._pos = pg.Vector2(value)
 
     @property
-    def velocity(self: Self) -> None:
+    def velocity(self: Self) -> pg.Vector2:
         return self._velocity
 
     @velocity.setter
@@ -41,15 +41,20 @@ class Particle(object):
         self._velocity = pg.Vector2(value)
 
     @property
-    def accel(self: Self) -> None:
-        return self._accel
+    def net_force(self: Self) -> pg.Vector2:
+        return self._net_force
 
-    @accel.setter
-    def accel(self: Self, value: pg.Vector2) -> None:
-        self._accel = pg.Vector2(value)
+    @net_force.setter
+    def net_force(self: Self, value: pg.Vector2) -> None:
+        self._net_force = pg.Vector2(value)
 
     def update(self: Self, rel_game_speed: Real) -> None:
-        pass
+        # Velocity verlet
+        accel = self._net_force / self._mass
+        self._velocity += 0.5 * accel * rel_game_speed
+        self._pos += self._velocity * rel_game_speed
+        self._accel = self._net_force / self._mass
+        self._velocity += 0.5 * self._accel * rel_game_speed
 
 
 class Game(object):
@@ -70,6 +75,24 @@ class Game(object):
             vsync=self._settings['vsync']
         )
         self._running = 0
+        
+        # RENDERING
+        self._SCALE = 16
+        self._RADIUS = 1
+        self._COLORS = {
+            'bob': (255, 255, 255),
+        }
+        
+        # PHYSICS
+        self._GRAVITY = 9.8067
+        self._AMOUNT = 1 # amount of pendulums
+        self._LENGTH = 2
+        
+        # Misc.
+        self._pivot = pg.Vector2(self._SCREEN_SIZE) / 2 / self._SCALE
+        self._bobs = []
+        for i in range(1, self._AMOUNT + 1):
+            self._bobs.append(Particle(pos=self._pivot + (0, self._LENGTH * i)))
 
     def run(self: Self) -> None:
         self._running = 1
@@ -84,6 +107,34 @@ class Game(object):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self._running = 0
+
+            # Update
+            pos = self._pivot
+            for bob in self._bobs:
+                bob.net_force = (0, 0)
+                gravity = pg.Vector2(0, self._GRAVITY * bob.mass)
+                bob.net_force += gravity
+                bob.net_force += gravity.project() # tension
+
+                bob.update(rel_game_speed)
+                pos = bob.pos
+
+            ## Constraints
+            pos = self._pivot.copy()
+            for bob in self._bobs:
+                # becomes prev pos
+                pos += (bob.pos - pos).normalize() * self._LENGTH
+                bob.pos = pos
+
+            # Render
+            self._screen.fill((0, 0, 0))
+            for bob in self._bobs:
+                pg.draw.circle(
+                    self._screen,
+                    self._COLORS['bob'],
+                    bob.pos * self._SCALE,
+                    self._RADIUS,
+                )
 
             pg.display.update()
 
