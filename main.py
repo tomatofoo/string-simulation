@@ -77,10 +77,12 @@ class Game(object):
         self._running = 0
         
         # RENDERING
-        self._SCALE = 16
-        self._RADIUS = 1
+        self._SCALE = 32
+        self._RADIUS = 4
         self._COLORS = {
+            'arm': (255, 0, 0),
             'bob': (255, 255, 255),
+            'pivot': (0, 255, 0),
         }
         
         # PHYSICS
@@ -92,7 +94,7 @@ class Game(object):
         self._pivot = pg.Vector2(self._SCREEN_SIZE) / 2 / self._SCALE
         self._bobs = []
         for i in range(1, self._AMOUNT + 1):
-            self._bobs.append(Particle(pos=self._pivot + (0, self._LENGTH * i)))
+            self._bobs.append(Particle(pos=self._pivot + pg.Vector2(0, self._LENGTH * i).rotate(45)))
 
     def run(self: Self) -> None:
         self._running = 1
@@ -109,33 +111,40 @@ class Game(object):
                     self._running = 0
 
             # Update
-            pos = self._pivot
-            for bob in self._bobs:
-                bob.net_force = (0, 0)
-                gravity = pg.Vector2(0, self._GRAVITY * bob.mass)
-                bob.net_force += gravity
-                # bob.net_force += gravity.project() # tension
-
-                bob.update(rel_game_speed)
-                pos = bob.pos
-
-            ## Constraints
             pos = self._pivot.copy()
             for bob in self._bobs:
-                # becomes prev pos
+                gravity = pg.Vector2(0, self._GRAVITY * bob.mass)
+                tension = -gravity.project(bob.pos - pos)
+                bob.net_force = gravity + tension
+                bob.update(rel_game_speed)
+
+                # Constraints
                 pos += (bob.pos - pos).normalize() * self._LENGTH
                 bob.pos = pos
 
             # Render
             self._screen.fill((0, 0, 0))
+            pos = self._pivot
             for bob in self._bobs:
+                pg.draw.line(
+                    self._screen,
+                    self._COLORS['arm'],
+                    pos * self._SCALE,
+                    bob.pos * self._SCALE,
+                )
                 pg.draw.circle(
                     self._screen,
                     self._COLORS['bob'],
                     bob.pos * self._SCALE,
                     self._RADIUS,
                 )
-
+                pos = bob.pos
+            pg.draw.circle(
+                self._screen,
+                self._COLORS['pivot'],
+                self._pivot * self._SCALE,
+                self._RADIUS,
+            )
             pg.display.update()
 
         pg.quit()
