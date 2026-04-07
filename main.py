@@ -33,6 +33,22 @@ class Particle(object):
         self._pos = pg.Vector2(value)
 
     @property
+    def x(self: Self) -> Real:
+        return self._pos[0]
+
+    @x.setter
+    def x(self: Self, value: Real) -> None:
+        self._pos[0] = value
+
+    @property
+    def y(self: Self) -> Real:
+        return self._pos[1]
+
+    @y.setter
+    def y(self: Self, value: Real) -> None:
+        self._pos[1] = value
+
+    @property
     def velocity(self: Self) -> pg.Vector2:
         return self._velocity
 
