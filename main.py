@@ -114,7 +114,7 @@ class Game(object):
                 bob.net_force = (0, 0)
                 gravity = pg.Vector2(0, self._GRAVITY * bob.mass)
                 bob.net_force += gravity
-                bob.net_force += gravity.project() # tension
+                # bob.net_force += gravity.project() # tension
 
                 bob.update(rel_game_speed)
                 pos = bob.pos
