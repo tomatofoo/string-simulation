@@ -161,10 +161,11 @@ class Game(object):
 
             # Update
             pos = self._pivot
-            net_force = 0
+            force = 0
             for dex, bob in enumerate(self._bobs):
-                net_force += self._GRAVITY * bob.mass * math.cos(bob.angle_rad) * 0.5
-                bob.net_force = self._GRAVITY * bob.mass * math.cos(bob.angle_rad) + net_force
+                net_force = self._GRAVITY * bob.mass * math.cos(bob.angle_rad)
+                force += net_force
+                bob.net_force = net_force * (dex + 1) + force
                 bob.rel = (bob.pos - pos).normalize() * self._LENGTH
                 bob.pivot = pos
                 bob.update(rel_game_speed)
