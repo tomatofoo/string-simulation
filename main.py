@@ -1,3 +1,4 @@
+import math
 import time
 from numbers import Real
 from typing import Self
@@ -15,6 +16,7 @@ class Particle(object):
         self._pos = pg.Vector2(pos)
         self._velocity = pg.Vector2(velocity)
         self._net_force = pg.Vector2(net_force)
+        self._accel = self._net_force / self._mass
 
     @property
     def mass(self: Self) -> Real:
@@ -66,8 +68,7 @@ class Particle(object):
 
     def update(self: Self, rel_game_speed: Real) -> None:
         # Velocity verlet
-        accel = self._net_force / self._mass
-        self._velocity += 0.5 * accel * rel_game_speed
+        self._velocity += 0.5 * self._accel * rel_game_speed
         self._pos += self._velocity * rel_game_speed
         self._accel = self._net_force / self._mass
         self._velocity += 0.5 * self._accel * rel_game_speed
@@ -83,7 +84,7 @@ class Game(object):
         pg.init()
 
         self._settings = {
-            'vsync': 1,
+            'vsync': 0,
         }
         self._screen = pg.display.set_mode(
             self._SCREEN_SIZE,
@@ -110,7 +111,9 @@ class Game(object):
         self._pivot = pg.Vector2(self._SCREEN_SIZE) / 2 / self._SCALE
         self._bobs = []
         for i in range(1, self._AMOUNT + 1):
-            self._bobs.append(Particle(pos=self._pivot + pg.Vector2(0, self._LENGTH * i).rotate(45)))
+            self._bobs.append(Particle(
+                pos=self._pivot + pg.Vector2(0, self._LENGTH * i).rotate(45),
+            ))
 
     def run(self: Self) -> None:
         self._running = 1
@@ -125,6 +128,7 @@ class Game(object):
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self._running = 0
+            self._screen.fill((0, 0, 0))
 
             # Update
             pos = self._pivot.copy()
@@ -139,7 +143,6 @@ class Game(object):
                 bob.pos = pos
 
             # Render
-            self._screen.fill((0, 0, 0))
             pos = self._pivot
             for bob in self._bobs:
                 pg.draw.line(
