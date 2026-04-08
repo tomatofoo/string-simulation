@@ -127,7 +127,7 @@ class Game(object):
         
         # PHYSICS
         self._GRAVITY = 9.8
-        self._AMOUNT = 32 # amount of pendulums
+        self._AMOUNT = 64 # amount of pendulums
         self._LENGTH = 6 / self._AMOUNT
         
         # Misc.
