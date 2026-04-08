@@ -128,7 +128,7 @@ class Game(object):
         # PHYSICS
         self._GRAVITY = 9.8
         self._AMOUNT = 32 # amount of pendulums
-        self._LENGTH = 8 / self._AMOUNT
+        self._LENGTH = 6 / self._AMOUNT
         
         # Misc.
         self._pivot = pg.Vector2(self._SCREEN_SIZE) / 2 / self._SCALE
@@ -168,7 +168,6 @@ class Game(object):
                 bob.rel = (bob.pos - pos).normalize() * self._LENGTH
                 bob.pivot = pos
                 bob.update(rel_game_speed)
-                bob.velocity *= 0.6**rel_game_speed
                 pos = bob.pos
 
             # Render
