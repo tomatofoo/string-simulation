@@ -151,12 +151,14 @@ class Game(object):
                     pos * self._SCALE,
                     bob.pos * self._SCALE,
                 )
+                """
                 pg.draw.circle(
                     self._screen,
                     self._COLORS['bob'],
                     bob.pos * self._SCALE,
                     self._RADIUS,
                 )
+                """
                 pos = bob.pos
             pg.draw.circle(
                 self._screen,
