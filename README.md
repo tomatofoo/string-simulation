@@ -1,2 +1,2 @@
 # string-simulation
-a string simulation using multiple pendulums
+a string simulation using multiple springs

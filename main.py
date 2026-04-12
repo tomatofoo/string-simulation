@@ -94,7 +94,7 @@ class Bob(object):
         # Velocity verlet
         self._accel = self._net_force / self._mass
         self._velocity += self._accel * rel_game_speed
-        self._rel.rotate_rad_ip(self._velocity * self._length * rel_game_speed)
+        self._rel.rotate_rad_ip(self._velocity / self._length * rel_game_speed)
 
 
 class Game(object):
@@ -126,8 +126,8 @@ class Game(object):
         }
         
         # PHYSICS
-        self._GRAVITY = 9.8 * 3
-        self._AMOUNT = 64 # amount of pendulums
+        self._GRAVITY = 9.8
+        self._AMOUNT = 20 # amount of pendulums
         self._LENGTH = 6 / self._AMOUNT
         
         # Misc.
@@ -138,7 +138,11 @@ class Game(object):
         self._bobs = []
         pos = self._pivot.copy()
         for i in range(self._AMOUNT):
-            bob = Bob(pivot=pos, rel=pg.Vector2(0, self._LENGTH).rotate(90))
+            bob = Bob(
+                pivot=pos,
+                mass=(self._AMOUNT - i) / self._AMOUNT,
+                rel=pg.Vector2(0, self._LENGTH).rotate(90),
+            )
             pos = bob.pos
             self._bobs.append(bob)
 
@@ -161,16 +165,13 @@ class Game(object):
 
             # Update
             pos = self._pivot
-            force = 0
             for dex, bob in enumerate(self._bobs):
                 net_force = self._GRAVITY * bob.mass * math.cos(bob.angle_rad)
-                force += net_force
-                bob.net_force = net_force * (self._AMOUNT - dex) / self._AMOUNT + force
+                bob.net_force = net_force
                 bob.rel = (bob.pos - pos).normalize() * self._LENGTH
                 bob.pivot = pos
                 bob.update(rel_game_speed)
                 pos = bob.pos
-                bob.velocity *= 0.9**rel_game_speed
 
             # Render
             self._screen.fill((0, 0, 0))
