@@ -207,6 +207,7 @@ class Game(object):
             self._pivot.pos,
             self._RADIUS,
         )
+        self._screen.blit(self._info, (0, 0))
 
     def run(self: Self) -> None:
         self._running = 1
@@ -257,7 +258,6 @@ class Game(object):
 
             # RENDER
             self._render(accumulator)
-            self._screen.blit(self._info, (0, 0))
             pg.display.update()
 
         pg.quit()
