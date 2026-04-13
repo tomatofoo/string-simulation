@@ -171,7 +171,7 @@ class Game(object):
                     self._screen,
                     self._COLORS['bob'],
                     pos,
-                    self._RADIUS,
+                    self._RADIUS * bob.mass,
                 )
             prev = pos
         pg.draw.circle(
