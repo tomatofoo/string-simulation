@@ -107,6 +107,7 @@ class Game(object):
             flags=self._SCREEN_FLAGS,
             vsync=self._settings['vsync']
         )
+        pg.display.set_caption('String Simulation')
         self._running = 0
 
         # RENDERING
