@@ -109,7 +109,6 @@ class Game(object):
         )
         self._running = 0
 
-
         # RENDERING
         self._RADIUS = 4
         self._THICKNESS = 4
@@ -188,7 +187,6 @@ class Game(object):
         accumulator = 0 # https://www.gafferongames.com/post/fix_your_timestep/
 
         clicking = 0
-        movement = (0, 0)
 
         while self._running:
             delta_time = time.time() - start_time
@@ -205,9 +203,6 @@ class Game(object):
                         self._reset()
                     elif event.key == pg.K_s:
                         self._SHOW_BOBS = not self._SHOW_BOBS
-                elif event.type == pg.MOUSEMOTION and clicking:
-                    self._pivot.pos += event.rel
-                    movement = pg.Vector2(event.rel) * self._MOVEMENT
                 elif (
                     event.type == pg.MOUSEBUTTONDOWN
                     and self._pivot.pos.distance_to(event.pos) < self._RADIUS
@@ -217,6 +212,13 @@ class Game(object):
                     clicking = 0
             
             # UPDATE
+            rel = pg.mouse.get_rel()
+            if clicking: # not using pg.MOUSEMOTION on purpose
+                self._pivot.pos += rel
+                movement = pg.Vector2(rel) * self._MOVEMENT
+            else:
+                movement = (0, 0)
+
             accumulator += rel_game_speed
             while accumulator > self._TIMESTEP:
                 rel_game_speed = self._TIMESTEP
