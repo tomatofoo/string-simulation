@@ -122,7 +122,7 @@ class Game(object):
         self._SHOW_BOBS = 0 # not on purpose i swear
 
         # PHYSICS
-        self._MOVEMENT = 120 # multiplier of mouse cursor movement
+        self._MOVEMENT = 0 # multiplier of mouse cursor movement
         self._GRAVITY = pg.Vector2(0, 1000)
         self._AMOUNT = 12 # amount of pendulums
         self._LENGTH = 100 / self._AMOUNT
