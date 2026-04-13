@@ -212,10 +212,10 @@ class Game(object):
                     clicking = 0
             
             # UPDATE
-            rel = pg.mouse.get_rel()
+            rel = pg.Vector2(pg.mouse.get_rel())
             if clicking: # not using pg.MOUSEMOTION on purpose
                 self._pivot.pos += rel
-                movement = pg.Vector2(rel) * self._MOVEMENT
+                movement = rel * self._MOVEMENT
             else:
                 movement = (0, 0)
 
