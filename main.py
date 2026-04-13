@@ -131,6 +131,7 @@ class Game(object):
         
         # Misc.
         self._pivot = Particle(1, pg.Vector2(self._SCREEN_SIZE) / 2)
+        self._movement = pg.Vector2(0, 0)
         self._reset()
 
         self._font = pg.font.SysFont('Arial', 16)
@@ -152,13 +153,38 @@ class Game(object):
                 friction=0.4,
             )
             self._bobs.append(bob)
+        # positions; for interpolation
+        self._last = [bob.pos.copy() for bob in self._bobs]
+
+    def _update(self: Self, rel_game_speed: Real) -> None:
+        # https://www.youtube.com/watch?v=0WaDxYuD9S8
+        antirestoring = pg.Vector2(0, 0)
+        for i in range(self._AMOUNT - 1, -1, -1):
+            bob = self._bobs[i]
+            next = self._bobs[i - 1] if i else self._pivot
+            spring = bob.pos - next.pos
+            restoring = ( # F = -kx
+                -self._K
+                * (spring.magnitude() - self._LENGTH)
+                * spring.normalize()
+            )
+            bob.net_force = (
+                self._movement
+                + self._GRAVITY * bob.mass
+                + restoring
+                + antirestoring
+            )
+            antirestoring = -restoring
+            bob.update(rel_game_speed)
 
     def _render(self: Self, accumulator: Real) -> None:
+        t = accumulator / self._TIMESTEP
+
         self._screen.fill(self._COLORS['fill'])
         prev = self._pivot.pos
-        for bob in self._bobs:
+        for dex, bob in enumerate(self._bobs):
             # Interpolation
-            pos = bob.pos + bob.velocity * accumulator
+            pos = self._last[dex].lerp(bob.pos, t)
             pg.draw.line(
                 self._screen,
                 self._COLORS['arm'],
@@ -185,6 +211,8 @@ class Game(object):
         self._running = 1
         start_time = time.time()
         accumulator = 0 # https://www.gafferongames.com/post/fix_your_timestep/
+        self._update(self._TIMESTEP)
+        # ^ so simulation is one step ahead; accounts for interpolation
 
         clicking = 0
 
@@ -215,35 +243,17 @@ class Game(object):
             rel = pg.Vector2(pg.mouse.get_rel())
             if clicking: # not using pg.MOUSEMOTION on purpose
                 self._pivot.pos += rel
-                movement = rel * self._MOVEMENT
+                self._movement.update(rel * self._MOVEMENT)
             else:
-                movement = (0, 0)
-
+                self._movement.update(0, 0)
+            
             accumulator += rel_game_speed
-            while accumulator > self._TIMESTEP:
+            while accumulator >= self._TIMESTEP:
                 rel_game_speed = self._TIMESTEP
                 accumulator -= rel_game_speed
+                self._last = [bob.pos.copy() for bob in self._bobs]
+                self._update(rel_game_speed)
 
-                # https://www.youtube.com/watch?v=0WaDxYuD9S8
-                antirestoring = pg.Vector2(0, 0)
-                for i in range(self._AMOUNT - 1, -1, -1):
-                    bob = self._bobs[i]
-                    next = self._bobs[i - 1] if i else self._pivot
-                    spring = bob.pos - next.pos
-                    restoring = ( # F = -kx
-                        -self._K
-                        * (spring.magnitude() - self._LENGTH)
-                        * spring.normalize()
-                    )
-                    bob.net_force = (
-                        movement
-                        + self._GRAVITY * bob.mass
-                        + restoring
-                        + antirestoring
-                    )
-                    antirestoring = -restoring
-                    bob.update(rel_game_speed)
-           
             # RENDER
             self._render(accumulator)
             self._screen.blit(self._info, (0, 0))
