@@ -6,27 +6,23 @@ from typing import Self
 import pygame as pg
 
 
-class Bob(object):
+class Particle(object):
     def __init__(self: Self,
-                 pivot: pg.Vector2,
-                 mass: Real=1,
-                 rel: pg.Vector2=(0, 1),
-                 velocity: Real=0, # angular * length
-                 net_force: Real=0) -> None:
-        self._pivot = pivot
+                 mass: Real,
+                 pos: pg.Vector2,
+                 velocity: pg.Vector2=(0, 0),
+                 net_force: pg.Vector2=(0, 0),
+                 friction: Real=1) -> None:
+
         self._mass = mass
-        self.rel = pg.Vector2(rel)
-        self._velocity = velocity
-        self._net_force = net_force
+        self._pos = pg.Vector2(pos)
+        self._velocity = pg.Vector2(velocity)
+        self._net_force = pg.Vector2(net_force)
         self._accel = self._net_force / self._mass
+        self._friction = friction
 
-    @property
-    def pivot(self: Self) -> pg.Vector2:
-        return self._pivot
-
-    @pivot.setter
-    def pivot(self: Self, value: pg.Vector2) -> None:
-        self._pivot = pg.Vector2(value)
+    def __getitem__(self: Self, item: int) -> None:
+        return self._pos[item]
 
     @property
     def mass(self: Self) -> Real:
@@ -37,26 +33,12 @@ class Bob(object):
         self._mass = value
 
     @property
-    def rel(self: Self) -> pg.Vector2:
-        return self._rel
-
-    @rel.setter
-    def rel(self: Self, value: pg.Vector2) -> None:
-        self._rel = pg.Vector2(value)
-        self._length = self._rel.magnitude()
-        self._pos = self._pivot + self._rel
-
-    @property
     def pos(self: Self) -> pg.Vector2:
-        return self._pivot + self._rel
+        return self._pos
 
-    @property
-    def angle(self: Self) -> Real:
-        return self._rel.angle
-
-    @property
-    def angle_rad(self: Self) -> Real:
-        return self._rel.angle_rad
+    @pos.setter
+    def pos(self: Self, value: pg.Vector2) -> None:
+        self._pos = pg.Vector2(value)
 
     @property
     def x(self: Self) -> Real:
@@ -75,26 +57,35 @@ class Bob(object):
         self._pos[1] = value
 
     @property
-    def velocity(self: Self) -> Real:
+    def velocity(self: Self) -> pg.Vector2:
         return self._velocity
 
     @velocity.setter
-    def velocity(self: Self, value: Real) -> None:
-        self._velocity = value
+    def velocity(self: Self, value: pg.Vector2) -> None:
+        self._velocity = pg.Vector2(value)
 
     @property
-    def net_force(self: Self) -> Real:
+    def net_force(self: Self) -> pg.Vector2:
         return self._net_force
 
     @net_force.setter
-    def net_force(self: Self, value: Real) -> None:
-        self._net_force = value
+    def net_force(self: Self, value: pg.Vector2) -> None:
+        self._net_force = pg.Vector2(value)
+
+    @property
+    def friction(self: Self) -> Real:
+        return self._friction
+
+    @friction.setter
+    def friction(self: Self, value: Real) -> None:
+        self._friction = value
 
     def update(self: Self, rel_game_speed: Real) -> None:
-        # Velocity verlet
+        # For some reason Euler integration works best????
         self._accel = self._net_force / self._mass
         self._velocity += self._accel * rel_game_speed
-        self._rel.rotate_rad_ip(self._velocity / self._length * rel_game_speed)
+        self._pos += self._velocity * rel_game_speed
+        self._velocity *= self._friction**rel_game_speed
 
 
 class Game(object):
@@ -117,91 +108,106 @@ class Game(object):
         self._running = 0
         
         # RENDERING
-        self._SCALE = 32
         self._RADIUS = 4
         self._COLORS = {
+            'fill': (0, 0, 0),
             'arm': (255, 0, 0),
             'bob': (255, 255, 255),
             'pivot': (0, 255, 0),
         }
         
         # PHYSICS
-        self._GRAVITY = 9.8
-        self._AMOUNT = 20 # amount of pendulums
-        self._LENGTH = 6 / self._AMOUNT
+        self._GRAVITY = pg.Vector2(0, 1000)
+        self._AMOUNT = 10 # amount of pendulums
+        self._LENGTH = 100 / self._AMOUNT
+        self._MASS = 1
+        self._K = 1000
         
         # Misc.
-        self._pivot = pg.Vector2(self._SCREEN_SIZE) / 2 / self._SCALE
+        self._pivot = Particle(1, pg.Vector2(self._SCREEN_SIZE) / 2)
         self._reset()
 
     def _reset(self: Self) -> None:
+        vector = pg.Vector2(self._LENGTH, 0).rotate(45)
         self._bobs = []
-        pos = self._pivot.copy()
         for i in range(self._AMOUNT):
-            bob = Bob(
-                pivot=pos,
-                mass=(self._AMOUNT - i) / self._AMOUNT,
-                rel=pg.Vector2(0, self._LENGTH).rotate(90),
+            bob = Particle(
+                mass=self._MASS,
+                pos=self._pivot.pos + (i + 1) * vector,
+                friction=0.8,
             )
-            pos = bob.pos
             self._bobs.append(bob)
 
     def run(self: Self) -> None:
         self._running = 1
         start_time = time.time()
 
+        clicking = 0
+
         while self._running:
-            delta_time = min(time.time() - start_time, 1 / 15)
+            delta_time = time.time() - start_time
             start_time = time.time()
 
             rel_game_speed = delta_time * self._GAME_SPEED
-
+            
+            # EVENTS
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self._running = 0
                 elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_r:
                         self._reset()
+                elif event.type == pg.MOUSEMOTION and clicking:
+                    self._pivot.pos += event.rel
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    clicking = self._pivot.pos.distance_to(event.pos) < self._RADIUS
+                elif event.type == pg.MOUSEBUTTONUP:
+                    clicking = 0
 
-            # Update
-            pos = self._pivot
-            for dex, bob in enumerate(self._bobs):
-                net_force = self._GRAVITY * bob.mass * math.cos(bob.angle_rad)
-                bob.net_force = net_force
-                bob.rel = (bob.pos - pos).normalize() * self._LENGTH
-                bob.pivot = pos
+            pg.display.set_caption(str(1 / delta_time) if delta_time else 'inf')
+            
+            # UPDATE
+            force = pg.Vector2(0, 0)
+            for i in range(self._AMOUNT - 1, -1, -1):
+                bob = self._bobs[i]
+                next = self._bobs[i - 1] if i else self._pivot
+                spring = bob.pos - next.pos
+                restoring = ( # F = -kx
+                    -self._K
+                    * (spring.magnitude() - self._LENGTH)
+                    * spring.normalize()
+                )
+                bob.net_force = self._GRAVITY * bob.mass + restoring - force
+                force = restoring
                 bob.update(rel_game_speed)
-                pos = bob.pos
 
-            # Render
-            self._screen.fill((0, 0, 0))
-            pos = self._pivot
+            # RENDER
+            self._screen.fill(self._COLORS['fill'])
+            pg.draw.circle(
+                self._screen,
+                self._COLORS['pivot'],
+                self._pivot.pos,
+                self._RADIUS,
+            )
+            prev = self._pivot
             for bob in self._bobs:
                 pg.draw.line(
                     self._screen,
                     self._COLORS['arm'],
-                    pos * self._SCALE,
-                    bob.pos * self._SCALE,
+                    prev.pos,
+                    bob.pos,
                 )
-                """
                 pg.draw.circle(
                     self._screen,
                     self._COLORS['bob'],
-                    bob.pos * self._SCALE,
+                    bob.pos,
                     self._RADIUS,
-                )"""
-                pos = bob.pos
-
-            pg.draw.circle(
-                self._screen,
-                self._COLORS['pivot'],
-                self._pivot * self._SCALE,
-                self._RADIUS,
-            )
+                )
+                prev = bob
+            
             pg.display.update()
 
         pg.quit()
-
 
 if __name__ == '__main__':
     Game().run()
