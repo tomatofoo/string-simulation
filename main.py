@@ -87,6 +87,13 @@ class Particle(object):
         self._pos += self._velocity * rel_game_speed
         self._velocity *= self._friction**rel_game_speed
 
+        """
+        self._velocity += 0.5 * self._accel * rel_game_speed
+        self._pos += self._velocity * rel_game_speed
+        self._accel = self._net_force / self._mass
+        self._velocity += 0.5 * self._accel * rel_game_speed
+        """
+
 
 class Game(object):
 
