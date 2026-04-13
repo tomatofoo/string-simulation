@@ -157,7 +157,7 @@ class Game(object):
         # positions; for interpolation
         self._last = [bob.pos.copy() for bob in self._bobs]
 
-    def _update(self: Self, rel_game_speed: Real) -> None:
+    def _update_bobs(self: Self, rel_game_speed: Real) -> None:
         # https://www.youtube.com/watch?v=0WaDxYuD9S8
         antirestoring = pg.Vector2(0, 0)
         for i in range(self._AMOUNT - 1, -1, -1):
@@ -213,7 +213,7 @@ class Game(object):
         self._running = 1
         start_time = time.time()
         accumulator = 0 # https://www.gafferongames.com/post/fix_your_timestep/
-        self._update(self._TIMESTEP)
+        self._update_bobs(self._TIMESTEP)
         # ^ so simulation is one step ahead; accounts for interpolation
 
         clicking = 0
@@ -254,7 +254,7 @@ class Game(object):
                 rel_game_speed = self._TIMESTEP
                 accumulator -= rel_game_speed
                 self._last = [bob.pos.copy() for bob in self._bobs]
-                self._update(rel_game_speed)
+                self._update_bobs(rel_game_speed)
 
             # RENDER
             self._render(accumulator)
