@@ -98,7 +98,7 @@ class Game(object):
     _SCREEN_SIZE = (640, 480)
     _SCREEN_FLAGS = pg.RESIZABLE | pg.SCALED
     _GAME_SPEED = 1
-    _TIMESTEP = 1 / 60
+    _TIMESTEP = 1 / 240
 
     def __init__(self: Self) -> None:
         pg.init()
@@ -128,12 +128,12 @@ class Game(object):
 
         # PHYSICS
         self._MOVEMENT = 100 # multiplier of mouse cursor movement
-        self._FRICTION = 0.4 # friction multiplier
+        self._FRICTION = 0.2 # friction multiplier
         self._GRAVITY = pg.Vector2(0, 1000)
-        self._AMOUNT = 12 # amount of pendulums
+        self._AMOUNT = 24 # amount of pendulums
         self._LENGTH = 100 / self._AMOUNT # length of each pendulum
-        self._MASS = 1
-        self._K = 1000
+        self._MASS = 0.5
+        self._K = 2000
         self._OBSTRUCTION_RADIUS = 20
         
         # Misc.
@@ -229,7 +229,7 @@ class Game(object):
                     self._screen,
                     self._COLORS['bob'],
                     pos,
-                    self._RADIUS * bob.mass,
+                    self._RADIUS,
                 )
             prev = pos
         pg.draw.circle(
