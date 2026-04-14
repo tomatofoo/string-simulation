@@ -6,6 +6,10 @@ from typing import Self
 import pygame as pg
 
 
+def normalize_angle(angle: Real) -> Real:
+    return (angle + 180) % 360 - 180
+
+
 class Particle(object):
     def __init__(self: Self,
                  mass: Real,
@@ -117,18 +121,21 @@ class Game(object):
             'fill': (0, 0, 0),
             'arm': (255, 0, 0),
             'bob': (255, 255, 255),
+            'obstruction': (0, 255, 255),
             'pivot': (0, 255, 0),
             'text': (255, 255, 255),
         }
         self._SHOW_BOBS = 0 # not on purpose i swear
 
         # PHYSICS
-        self._MOVEMENT = 0 # multiplier of mouse cursor movement
+        self._MOVEMENT = 100 # multiplier of mouse cursor movement
         self._GRAVITY = pg.Vector2(0, 1000)
         self._AMOUNT = 12 # amount of pendulums
         self._LENGTH = 100 / self._AMOUNT
         self._MASS = 1
         self._K = 1000
+        self._OBSTRUCTION_RADIUS = 20
+        self._OBSTRUCTION = 0
         
         # Misc.
         self._pivot = Particle(1, pg.Vector2(self._SCREEN_SIZE) / 2)
@@ -139,6 +146,7 @@ class Game(object):
         self._info = self._font.render(
             '<r> to reset the rope\n'
             '<s> to show / hide spring bobs\n'
+            '<o> to enable / disable obstruction\n'
             'drag pivot with mouse cursor',
             1,
             self._COLORS['text'],
@@ -151,15 +159,18 @@ class Game(object):
             bob = Particle(
                 mass=self._MASS,
                 pos=self._pivot.pos + (i + 1) * vector,
-                friction=0.4,
+                friction=0.2,
             )
             self._bobs.append(bob)
         # positions; for interpolation
         self._last = [bob.pos.copy() for bob in self._bobs]
 
-    def _update_bobs(self: Self, rel_game_speed: Real) -> None:
+    def _update_bobs(self: Self,
+                     rel_game_speed: Real,
+                     mouse_pos: pg.Vector2) -> None:
         # https://www.youtube.com/watch?v=0WaDxYuD9S8
         antirestoring = pg.Vector2(0, 0)
+        mouse_pos = pg.mouse.get_pos()
         for i in range(self._AMOUNT - 1, -1, -1):
             bob = self._bobs[i]
             next = self._bobs[i - 1] if i else self._pivot
@@ -176,12 +187,29 @@ class Game(object):
                 + antirestoring
             )
             antirestoring = -restoring
-            bob.update(rel_game_speed)
 
-    def _render(self: Self, accumulator: Real) -> None:
+            if (self._OBSTRUCTION
+                and bob.pos.distance_to(mouse_pos) < self._OBSTRUCTION_RADIUS):
+                vector = bob.pos - mouse_pos
+                if abs(normalize_angle(bob.net_force.angle_to(vector))) > 90:
+                    vector.scale_to_length(self._OBSTRUCTION_RADIUS)
+                    bob.pos = mouse_pos + vector
+                    # normal force
+                    bob.net_force += -bob.net_force.project(vector)
+
+            bob.update(rel_game_speed)
+        
+    def _render(self: Self, accumulator: Real, mouse_pos: pg.Vector2) -> None:
         t = accumulator / self._TIMESTEP
 
         self._screen.fill(self._COLORS['fill'])
+        if self._OBSTRUCTION:
+            pg.draw.circle(
+                self._screen,
+                self._COLORS['obstruction'],
+                pg.mouse.get_pos(),
+                self._OBSTRUCTION_RADIUS,
+            )
         prev = self._pivot.pos
         for dex, bob in enumerate(self._bobs):
             # Interpolation
@@ -213,7 +241,7 @@ class Game(object):
         self._running = 1
         start_time = time.time()
         accumulator = 0 # https://www.gafferongames.com/post/fix_your_timestep/
-        self._update_bobs(self._TIMESTEP)
+        self._update_bobs(self._TIMESTEP, pg.mouse.get_pos())
         # ^ so simulation is one step ahead; accounts for interpolation
 
         clicking = 0
@@ -233,6 +261,8 @@ class Game(object):
                         self._reset()
                     elif event.key == pg.K_s:
                         self._SHOW_BOBS = not self._SHOW_BOBS
+                    elif event.key == pg.K_o:
+                        self._OBSTRUCTION = not self._OBSTRUCTION
                 elif (
                     event.type == pg.MOUSEBUTTONDOWN
                     and self._pivot.pos.distance_to(event.pos) < self._RADIUS
@@ -242,10 +272,13 @@ class Game(object):
                     clicking = 0
             
             # UPDATE
-            rel = pg.Vector2(pg.mouse.get_rel())
+            mouse_pos = pg.Vector2(pg.mouse.get_pos())
+            mouse_rel = pg.Vector2(pg.mouse.get_rel())
             if clicking: # not using pg.MOUSEMOTION on purpose
-                self._pivot.pos += rel
-                self._movement.update(rel * self._MOVEMENT)
+                self._pivot.pos += mouse_rel
+                for bob in self._bobs:
+                    bob.pos += (0, 0)
+                self._movement.update(mouse_rel * self._MOVEMENT)
             else:
                 self._movement.update(0, 0)
             
@@ -254,10 +287,10 @@ class Game(object):
                 rel_game_speed = self._TIMESTEP
                 accumulator -= rel_game_speed
                 self._last = [bob.pos.copy() for bob in self._bobs]
-                self._update_bobs(rel_game_speed)
+                self._update_bobs(rel_game_speed, mouse_pos)
 
             # RENDER
-            self._render(accumulator)
+            self._render(accumulator, mouse_pos)
             pg.display.update()
 
         pg.quit()
