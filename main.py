@@ -191,6 +191,7 @@ class Game(object):
             if (self._OBSTRUCTION
                 and bob.pos.distance_to(mouse_pos) < self._OBSTRUCTION_RADIUS):
                 vector = bob.pos - mouse_pos
+                # make sure that force is against ball using vector angle
                 if abs(normalize_angle(bob.net_force.angle_to(vector))) > 90:
                     vector.scale_to_length(self._OBSTRUCTION_RADIUS)
                     bob.pos = mouse_pos + vector
