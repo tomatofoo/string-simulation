@@ -11,4 +11,11 @@ followed
 [Glenn Fiedler's well-known article on timestepping](https://www.gafferongames.com/post/fix_your_timestep/).
 
 ## Usage
-To change how the string behaves, 
+To change how the string behaves, edit the constants in the main Game class. At
+the top of the class, you can edit the timestep (`_TIMESTEP`). Making it 
+smaller makes the physics more accurate. In __init__, you can edit the physics 
+constants, such as gravity (`self._GRAVITY`), the spring constant (`self._K`), 
+the amount of springs (`self._AMOUNT`), the length of each spring 
+(`self._LENGTH`), the mass of each bob (`self._MASS`), and the radius of the 
+obstruction (`self._OBSTRUCTION_RADIUS`).
+
