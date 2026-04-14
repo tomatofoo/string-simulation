@@ -125,17 +125,16 @@ class Game(object):
             'pivot': (0, 255, 0),
             'text': (255, 255, 255),
         }
-        self._SHOW_BOBS = 0 # not on purpose i swear
 
         # PHYSICS
         self._MOVEMENT = 100 # multiplier of mouse cursor movement
+        self._FRICTION = 0.4 # friction multiplier
         self._GRAVITY = pg.Vector2(0, 1000)
         self._AMOUNT = 12 # amount of pendulums
         self._LENGTH = 100 / self._AMOUNT # length of each pendulum
         self._MASS = 1
         self._K = 1000
         self._OBSTRUCTION_RADIUS = 20
-        self._OBSTRUCTION = 0
         
         # Misc.
         self._pivot = Particle(1, pg.Vector2(self._SCREEN_SIZE) / 2)
@@ -152,6 +151,9 @@ class Game(object):
             self._COLORS['text'],
         )
 
+        self._show_bobs = 0 # not on purpose i swear
+        self._obstruction = 0
+
     def _reset(self: Self) -> None:
         vector = pg.Vector2(self._LENGTH, 0)
         self._bobs = []
@@ -159,7 +161,7 @@ class Game(object):
             bob = Particle(
                 mass=self._MASS,
                 pos=self._pivot.pos + (i + 1) * vector,
-                friction=0.4,
+                friction=self._FRICTION,
             )
             self._bobs.append(bob)
         # positions; for interpolation
@@ -188,7 +190,7 @@ class Game(object):
             )
             antirestoring = -restoring
 
-            if (self._OBSTRUCTION
+            if (self._obstruction
                 and bob.pos.distance_to(mouse_pos) < self._OBSTRUCTION_RADIUS):
                 vector = bob.pos - mouse_pos
                 # make sure that force is against ball using vector angle
@@ -204,7 +206,7 @@ class Game(object):
         t = accumulator / self._TIMESTEP
 
         self._screen.fill(self._COLORS['fill'])
-        if self._OBSTRUCTION:
+        if self._obstruction:
             pg.draw.circle(
                 self._screen,
                 self._COLORS['obstruction'],
@@ -222,7 +224,7 @@ class Game(object):
                 pos,
                 self._THICKNESS,
             )
-            if self._SHOW_BOBS:
+            if self._show_bobs:
                 pg.draw.circle(
                     self._screen,
                     self._COLORS['bob'],
@@ -261,9 +263,9 @@ class Game(object):
                     if event.key == pg.K_r:
                         self._reset()
                     elif event.key == pg.K_s:
-                        self._SHOW_BOBS = not self._SHOW_BOBS
+                        self._show_bobs = not self._show_bobs
                     elif event.key == pg.K_o:
-                        self._OBSTRUCTION = not self._OBSTRUCTION
+                        self._obstruction = not self._obstruction
                 elif (
                     event.type == pg.MOUSEBUTTONDOWN
                     and self._pivot.pos.distance_to(event.pos) < self._RADIUS
