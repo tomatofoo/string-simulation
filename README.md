@@ -11,6 +11,8 @@ followed
 [Glenn Fiedler's well-known article on timestepping](https://www.gafferongames.com/post/fix_your_timestep/).
 
 ## Usage
+Demo: <https://tomatofu.itch.io/string-simulation>
+
 To change how the string behaves, edit the constants in the main Game class:
 - simulation timestep: `_TIMESTEP`
 - mouse cursor movement force: `self._MOVEMENT`
