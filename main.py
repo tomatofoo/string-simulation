@@ -210,7 +210,6 @@ class Game(object):
                 pg.mouse.get_pos(),
                 self._OBSTRUCTION_RADIUS,
             )
-
         prev = self._pivot.pos
         for dex, bob in enumerate(self._bobs):
             # Interpolation
