@@ -20,5 +20,5 @@ To change how the string behaves, edit the constants in the main Game class:
 - resting length of each spring: `self._LENGTH`
 - mass of each bob: `self._MASS`
 - spring constant: `self._K`
-- radius of obstruction `self._OBSTRUCTION_RADIUS`
+- radius of obstruction: `self._OBSTRUCTION_RADIUS`
 
