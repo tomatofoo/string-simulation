@@ -21,3 +21,4 @@ To change how the string behaves, edit the constants in the main Game class:
 - mass of each bob: `self._MASS`
 - spring constant: `self._K`
 - radius of obstruction `self._OBSTRUCTION_RADIUS`
+
