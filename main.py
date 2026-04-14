@@ -203,7 +203,7 @@ class Game(object):
             bob.update(rel_game_speed)
         
     def _render(self: Self, accumulator: Real, mouse_pos: pg.Vector2) -> None:
-        t = accumulator / self._TIMESTEP
+        t = accumulator / self._TIMESTEP # for interpolation
 
         self._screen.fill(self._COLORS['fill'])
         if self._obstruction:
