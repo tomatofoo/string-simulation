@@ -168,9 +168,9 @@ class Game(object):
     def _update_bobs(self: Self,
                      rel_game_speed: Real,
                      mouse_pos: pg.Vector2) -> None:
+
         # https://www.youtube.com/watch?v=0WaDxYuD9S8
         antirestoring = pg.Vector2(0, 0)
-        mouse_pos = pg.mouse.get_pos()
         for i in range(self._AMOUNT - 1, -1, -1):
             bob = self._bobs[i]
             next = self._bobs[i - 1] if i else self._pivot
@@ -210,6 +210,7 @@ class Game(object):
                 pg.mouse.get_pos(),
                 self._OBSTRUCTION_RADIUS,
             )
+
         prev = self._pivot.pos
         for dex, bob in enumerate(self._bobs):
             # Interpolation
