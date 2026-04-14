@@ -159,7 +159,7 @@ class Game(object):
             bob = Particle(
                 mass=self._MASS,
                 pos=self._pivot.pos + (i + 1) * vector,
-                friction=0.2,
+                friction=0.4,
             )
             self._bobs.append(bob)
         # positions; for interpolation
