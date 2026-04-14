@@ -10,3 +10,5 @@ for Euler's methods. To keep the movement consistent (even if inaccurate) I
 followed
 [Glenn Fiedler's well-known article on timestepping](https://www.gafferongames.com/post/fix_your_timestep/).
 
+## Usage
+To change how the string behaves, 

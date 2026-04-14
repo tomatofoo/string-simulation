@@ -131,7 +131,7 @@ class Game(object):
         self._MOVEMENT = 100 # multiplier of mouse cursor movement
         self._GRAVITY = pg.Vector2(0, 1000)
         self._AMOUNT = 12 # amount of pendulums
-        self._LENGTH = 100 / self._AMOUNT
+        self._LENGTH = 100 / self._AMOUNT # length of each pendulum
         self._MASS = 1
         self._K = 1000
         self._OBSTRUCTION_RADIUS = 20
