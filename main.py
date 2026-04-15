@@ -192,6 +192,8 @@ class Game(object):
 
             if (self._obstruction
                 and bob.pos.distance_to(mouse_pos) < self._OBSTRUCTION_RADIUS):
+                # not perfectly accurate (especially with large timestep) but 
+                # is a really good approximation of where collision took place
                 vector = bob.pos - mouse_pos
                 # make sure that force is against ball using vector angle
                 if abs(normalize_angle(bob.net_force.angle_to(vector))) > 90:
