@@ -20,7 +20,6 @@ class Particle(object):
 
         self._mass = mass
         self._pos = pg.Vector2(pos)
-        self._prev = self._pos.copy()
         self._velocity = pg.Vector2(velocity)
         self._net_force = pg.Vector2(net_force)
         self._accel = self._net_force / self._mass
