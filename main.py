@@ -6,10 +6,6 @@ from typing import Self
 import pygame as pg
 
 
-def normalize_angle(angle: Real) -> Real:
-    return (angle + 180) % 360 - 180
-
-
 class Particle(object):
     def __init__(self: Self,
                  mass: Real,
@@ -127,7 +123,7 @@ class Game(object):
 
         # PHYSICS
         self._MOVEMENT = 100 # multiplier of mouse cursor movement
-        self._FRICTION = 0.2 # friction multiplier
+        self._FRICTION = 0.4 # friction multiplier
         self._GRAVITY = pg.Vector2(0, 1000)
         self._AMOUNT = 24 # amount of pendulums
         self._LENGTH = 100 / self._AMOUNT # length of each pendulum
@@ -195,7 +191,8 @@ class Game(object):
                 # is a really good approximation of where collision took place
                 vector = bob.pos - mouse_pos
                 # make sure that force is against ball using vector angle
-                if abs(normalize_angle(bob.net_force.angle_to(vector))) > 90:
+                # (dot product)
+                if bob.net_force.dot(vector) < 0:
                     vector.scale_to_length(self._OBSTRUCTION_RADIUS)
                     bob.pos = mouse_pos + vector
                     # normal force
